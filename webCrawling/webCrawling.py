@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[30]:
 
 
 get_ipython().system('pip install bs4')
@@ -14,12 +14,12 @@ import time
 from elasticsearch import Elasticsearch, helpers
 
 
-# In[2]:
+# In[43]:
 
 
 days_range = []
 
-start = datetime.datetime.strptime("2020-09-01", "%Y-%m-%d")
+start = datetime.datetime.strptime("2020-05-01", "%Y-%m-%d")
 end = datetime.datetime.strptime("2020-09-16", "%Y-%m-%d") # 범위 + 1
 date_generated = [start + datetime.timedelta(days=x) for x in range(0, (end-start).days)]
 
@@ -29,14 +29,14 @@ for date in date_generated:
 print(days_range)
 
 
-# In[3]:
+# In[44]:
 
 
 es = Elasticsearch("http://172.19.0.2:9200/")
 es.info()
 
 
-# In[27]:
+# In[45]:
 
 
 index_name = 'news'
@@ -68,29 +68,28 @@ body = {
 
 es.indices.create(index=index_name, body=body)
 
-# doc = {'title': '한국어 처리 여야 하나?', 'url': 'naver.com'}
-# es.index(index=index_name, doc_type='_doc', body=doc)
 
-
-# In[ ]:
+# In[46]:
 
 
 # 기사 목록 가져오기
 base_url = "https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&date="
 for date in days_range:
     date_url = base_url + (date)
-    for i in range(400):
+    for i in range(100, 106):
         url = date_url + "&sid1=" + str(i)
-        response = urllib.request.urlopen(url)
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        response = urllib.request.urlopen(req).read()
 
         soup = BeautifulSoup(response, "html.parser")
         results = soup.select("dt.photo")
-
+        
+        print(url)
         for result in results:
-            print("제목 : ", result.a.img.attrs["alt"])
-            print("img_url : ", result.a.img.attrs["src"])
-            print("url : ", result.a.attrs["href"])
-            print("\n")
+#             print("제목 : ", result.a.img.attrs["alt"])
+#             print("img_url : ", result.a.img.attrs["src"])
+#             print("url : ", result.a.attrs["href"])
+#             print("\n")
             doc = {
                 'title': result.a.img.attrs["alt"],   
                 'url': result.a.attrs["href"],
@@ -99,17 +98,11 @@ for date in days_range:
             es.index(index=index_name, doc_type='_doc', body=doc)
 
 
-# In[24]:
+# In[48]:
 
 
 # test query
-results = es.search(index=index_name, body={'from':0, 'size':10, 'query':{'match':{'title.nori':'자본'}}})
+results = es.search(index=index_name, body={'from':0, 'size':3, 'query':{'match':{'title.nori':'코로나'}}})
 for result in results['hits']['hits']:
     print('score:', result['_score'], 'source:', result['_source'])
-
-
-# In[ ]:
-
-
-
 
