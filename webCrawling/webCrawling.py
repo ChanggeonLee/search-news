@@ -2,11 +2,6 @@
 # coding: utf-8
 
 # In[30]:
-
-
-get_ipython().system('pip install bs4')
-get_ipython().system('pip install tqdm')
-get_ipython().system('pip install elasticsearch')
 import datetime
 import urllib.request
 from bs4 import BeautifulSoup
@@ -33,7 +28,7 @@ print(days_range)
 
 
 es = Elasticsearch("http://172.19.0.2:9200/")
-es.info()
+print(es.info())
 
 
 # In[45]:
@@ -86,8 +81,8 @@ for date in days_range:
         
         print(url)
         for result in results:
-#             print("제목 : ", result.a.img.attrs["alt"])
-#             print("img_url : ", result.a.img.attrs["src"])
+            print("제목 : ", result.a.img.attrs["alt"])
+            # print("img_url : ", result.a.img.attrs["src"])
 #             print("url : ", result.a.attrs["href"])
 #             print("\n")
             doc = {
